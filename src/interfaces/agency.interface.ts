@@ -7,4 +7,5 @@ export interface Agency {
   employees: string | undefined;
   hourlyRate: string | undefined;
   minProjectSize: string | undefined;
+  url: string | undefined;
 }

@@ -10,6 +10,11 @@ export class Scraper {
     try {
       await this.initialize();
       await this.navigate('https://clutch.co/web-developers');
+
+      // Save HTML for debugging
+      const content = await this.page!.content();
+      fs.writeFileSync('clutch.html', content);
+
       const agencies = await this.extractData();
       this.saveData(agencies);
     } catch (error) {
@@ -51,6 +56,24 @@ export class Scraper {
         const hourlyRate = (agency.querySelector('div.provider__highlights-item.hourly-rate') as HTMLElement)?.innerText.trim();
         const minProjectSize = (agency.querySelector('div.provider__highlights-item.min-project-size') as HTMLElement)?.innerText.trim();
 
+        const websiteLink = agency.querySelector('a.provider__cta-link.website-link__item') as HTMLAnchorElement;
+        let url: string | undefined = undefined;
+        if (websiteLink) {
+            const href = websiteLink.getAttribute('href');
+            if (href) {
+                try {
+                    const fullUrl = new URL(href, 'https://clutch.co');
+                    const urlParams = new URLSearchParams(fullUrl.search);
+                    const u = urlParams.get('u');
+                    if (u) {
+                        url = decodeURIComponent(u);
+                    }
+                } catch (e) {
+                    console.error('Error parsing URL:', href, e);
+                }
+            }
+        }
+
         agencyData.push({
           title,
           rating,
@@ -60,6 +83,7 @@ export class Scraper {
           employees,
           hourlyRate,
           minProjectSize,
+          url,
         });
       }
       return agencyData;
