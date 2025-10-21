@@ -1,6 +1,7 @@
 import puppeteer, {Browser, Page} from 'puppeteer';
 import fs from 'fs';
 import {Agency} from './interfaces/agency.interface';
+import {Range} from "./interfaces/range.interface";
 
 export class Scraper {
     private browser : Browser | null = null;
@@ -52,16 +53,60 @@ export class Scraper {
         return this.page.evaluate(() => {
             const agencyList = document.querySelectorAll('li.provider-list-item');
             const agencyData : Agency[] = [];
+            const reviewSuffix : string = ' reviews';
+
             for (let i = 0; i < 50 && i < agencyList.length; i++) {
                 const agency = agencyList[i];
                 const title = (agency.querySelector('h3.provider__title a') as HTMLElement)?.innerText.trim();
-                const rating = (agency.querySelector('span.sg-rating__number') as HTMLElement)?.innerText.trim();
-                const reviewCount = (agency.querySelector('a.sg-rating__reviews') as HTMLElement)?.innerText.trim();
                 const services = Array.from(agency.querySelectorAll('div.provider__services-list-item')).map(service => (service as HTMLElement).innerText.trim());
                 const location = (agency.querySelector('div.provider__highlights-item.location') as HTMLElement)?.innerText.trim();
-                const employees = (agency.querySelector('div.provider__highlights-item.employees-count') as HTMLElement)?.innerText.trim();
-                const hourlyRate = (agency.querySelector('div.provider__highlights-item.hourly-rate') as HTMLElement)?.innerText.trim();
-                const minProjectSize = (agency.querySelector('div.provider__highlights-item.min-project-size') as HTMLElement)?.innerText.trim();
+
+                let employeesMin : number = 0;
+                let employeesMax : number = 0;
+                const employeesRaw : string = (agency.querySelector('div.provider__highlights-item.employees-count') as HTMLElement)?.innerText.trim();
+                if (employeesRaw && employeesRaw.includes(' - ')) {
+                    employeesMin = parseInt(employeesRaw.split(' - ')[0] || '0');
+                    employeesMax = parseInt(employeesRaw.split(' - ')[1] || '0');
+                }
+                let employees : Range = {
+                    min: employeesMin,
+                    max: employeesMax
+                };
+
+                let hourlyRateMin : number = 0;
+                let hourlyRateMax : number = 0;
+                let rawHourlyRate : string = (agency.querySelector('div.provider__highlights-item.hourly-rate') as HTMLElement)?.innerText.trim();
+
+                if (rawHourlyRate && rawHourlyRate.includes(' / hr')) {
+                    rawHourlyRate = rawHourlyRate.replace(' / hr', '');
+                    if (rawHourlyRate.includes(' - ')) {
+                        hourlyRateMin = parseInt(rawHourlyRate.split(' - ')[0].replace(/[^a-zA-Z0-9 ]/g, '') || '0');
+                        hourlyRateMax = parseInt(rawHourlyRate.split(' - ')[1].replace(/[^a-zA-Z0-9 ]/g, '') || '0');
+                    }
+                }
+                let hourlyRate : Range = {
+                    min: hourlyRateMin,
+                    max: hourlyRateMax
+                };
+
+                let rating : number = 0;
+                const rawRating : string = (agency.querySelector('span.sg-rating__number') as HTMLElement)?.innerText.trim();
+                if (rawRating) {
+                    rating = parseFloat(rawRating);
+                }
+
+                let reviewCount : number = 0;
+                const rawReviewCount : string = (agency.querySelector('a.sg-rating__reviews') as HTMLElement)?.innerText.trim();
+
+                if (rawReviewCount && rawReviewCount.includes(reviewSuffix)) {
+                    reviewCount = parseInt(rawReviewCount.replace(reviewSuffix, ''));
+                }
+
+                let minProjectSize : number = 0;
+                let rawMinProjectSize = (agency.querySelector('div.provider__highlights-item.min-project-size') as HTMLElement)?.innerText.trim();
+                if (rawMinProjectSize) {
+                    minProjectSize = parseInt(rawMinProjectSize.replace(/[^a-zA-Z0-9 ]/g, ''));
+                }
 
                 const websiteLink = agency.querySelector('a.provider__cta-link.website-link__item') as HTMLAnchorElement;
                 let url : string | undefined = undefined;

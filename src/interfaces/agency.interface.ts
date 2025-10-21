@@ -1,11 +1,13 @@
+import {Range} from "./range.interface";
+
 export interface Agency {
   title: string | undefined;
-  rating: string | undefined;
-  reviewCount: string | undefined;
+  rating: number | 0;
+  reviewCount: number | 0;
   services: string[];
   location: string | undefined;
-  employees: string | undefined;
-  hourlyRate: string | undefined;
-  minProjectSize: string | undefined;
+  employees: Range;
+  hourlyRate: Range;
+  minProjectSize: number | undefined;
   url: string | undefined;
 }
