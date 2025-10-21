@@ -162,12 +162,11 @@ export class Scraper {
         }
         try {
             await this.page.goto(url, {waitUntil : 'networkidle2'});
-            const data = await this.page.evaluate(() => {
+            return await this.page.evaluate(() => {
                 const reviews = Array.from(document.querySelectorAll('div.profile-review__quote')).map(el => (el as HTMLElement).innerText.trim());
                 const profileSummary = (document.querySelector('div#profile-summary-text') as HTMLElement)?.innerText.trim();
                 return {reviews, profileSummary};
             });
-            return data;
         } catch (error) {
             console.error(`Error scraping profile data from ${url}:`, error);
             return {reviews : [], profileSummary : undefined};
