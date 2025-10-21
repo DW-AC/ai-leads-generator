@@ -1,0 +1,35 @@
+{
+  "name": "app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/scraper.js",
+  "scripts": {
+    "start": "npm run build && node dist/scraper.js",
+    "build": "tsc",
+    "clean": "rimraf dist",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DW-AC/ai-leads-generator.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/DW-AC/ai-leads-generator/issues"
+  },
+  "homepage": "https://github.com/DW-AC/ai-leads-generator#readme",
+  "dependencies": {
+    "puppeteer": "^24.25.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.8.1",
+    "@types/puppeteer": "^5.4.7",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.9.3"
+  }
+}
