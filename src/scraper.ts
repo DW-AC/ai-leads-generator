@@ -8,10 +8,10 @@ import {Range} from "./interfaces/range.interface";
 puppeteer.use(StealthPlugin());
 
 export class Scraper {
-    private browser: Browser | null = null;
-    private page: Page | null = null;
+    private browser : Browser | null = null;
+    private page : Page | null = null;
 
-    public async run(): Promise<void> {
+    public async run() : Promise<void> {
         try {
             await this.initialize();
             await this.navigate('https://clutch.co/web-developers');
@@ -29,26 +29,26 @@ export class Scraper {
         }
     }
 
-    private async initialize(): Promise<void> {
+    private async initialize() : Promise<void> {
         this.browser = await puppeteer.launch();
         this.page = await this.browser.newPage();
         await this.page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
     }
 
-    private async navigate(url: string): Promise<void> {
+    private async navigate(url : string) : Promise<void> {
         if (!this.page) {
             throw new Error('Page not initialized');
         }
-        await this.page.goto(url, { waitUntil: 'networkidle2' });
+        await this.page.goto(url, {waitUntil : 'networkidle2'});
     }
 
-    private async extractData(): Promise<Agency[]> {
+    private async extractData() : Promise<Agency[]> {
         if (!this.page) {
             throw new Error('Page not initialized');
         }
 
         const agencyHandles = await this.page.$$('li.provider-list-item');
-        const agencyData: Agency[] = [];
+        const agencyData : Agency[] = [];
 
         for (let i = 0; i < 50 && i < agencyHandles.length; i++) {
             const agencyHandle = agencyHandles[i];
@@ -78,8 +78,8 @@ export class Scraper {
                     employeesMax = parseInt(rawEmployees.split(' - ')[1] || '0');
                 }
                 let employees : Range = {
-                    min: employeesMin,
-                    max: employeesMax
+                    min : employeesMin,
+                    max : employeesMax
                 };
 
 
@@ -94,8 +94,8 @@ export class Scraper {
                     }
                 }
                 let hourlyRate : Range = {
-                    min: hourlyRateMin,
-                    max: hourlyRateMax
+                    min : hourlyRateMin,
+                    max : hourlyRateMax
                 };
 
                 let minProjectSize : number = 0;
@@ -105,7 +105,7 @@ export class Scraper {
                 }
 
                 const websiteLink = agency.querySelector('a.provider__cta-link.website-link__item') as HTMLAnchorElement;
-                let url: string | undefined = undefined;
+                let url : string | undefined = undefined;
                 if (websiteLink) {
                     const href = websiteLink.getAttribute('href');
                     if (href) {
@@ -144,35 +144,42 @@ export class Scraper {
 
         for (const agency of agencyData) {
             if (agency.reviewsUrl) {
-                agency.reviews = await this.extractReviews(agency.reviewsUrl);
+                const {reviews, profileSummary} = await this.extractProfileData(agency.reviewsUrl);
+                agency.reviews = reviews;
+                agency.profileSummary = profileSummary;
             }
         }
 
-        return agencyData.map(({ reviewsUrl, ...rest }) => rest);
+        return agencyData.map(({reviewsUrl, ...rest}) => rest);
     }
 
-    private async extractReviews(url: string): Promise<string[]> {
+    private async extractProfileData(url : string) : Promise<{
+        reviews : string[],
+        profileSummary : string | undefined
+    }> {
         if (!this.page) {
             throw new Error('Page not initialized');
         }
         try {
-            await this.page.goto(url, { waitUntil: 'networkidle2' });
-            return await this.page.evaluate(() => {
-                const reviewElements = document.querySelectorAll('div.profile-review__quote');
-                return Array.from(reviewElements).map(el => (el as HTMLElement).innerText.trim());
+            await this.page.goto(url, {waitUntil : 'networkidle2'});
+            const data = await this.page.evaluate(() => {
+                const reviews = Array.from(document.querySelectorAll('div.profile-review__quote')).map(el => (el as HTMLElement).innerText.trim());
+                const profileSummary = (document.querySelector('div#profile-summary-text') as HTMLElement)?.innerText.trim();
+                return {reviews, profileSummary};
             });
+            return data;
         } catch (error) {
-            console.error(`Error scraping reviews from ${url}:`, error);
-            return [];
+            console.error(`Error scraping profile data from ${url}:`, error);
+            return {reviews : [], profileSummary : undefined};
         }
     }
 
-    private saveData(agencies: Agency[]): void {
+    private saveData(agencies : Agency[]) : void {
         fs.writeFileSync('agencies.json', JSON.stringify(agencies, null, 2));
         console.log('Scraping complete. Data saved to agencies.json');
     }
 
-    private async close(): Promise<void> {
+    private async close() : Promise<void> {
         if (this.browser) {
             await this.browser.close();
         }
