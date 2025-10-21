@@ -10,4 +10,5 @@ export interface Agency {
   url: string | undefined;
   reviewsUrl?: string;
   reviews?: string[];
+  profileSummary?: string;
 }

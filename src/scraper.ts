@@ -101,27 +101,30 @@ export class Scraper {
 
     for (const agency of agencyData) {
       if (agency.reviewsUrl) {
-        agency.reviews = await this.extractReviews(agency.reviewsUrl);
+        const { reviews, profileSummary } = await this.extractProfileData(agency.reviewsUrl);
+        agency.reviews = reviews;
+        agency.profileSummary = profileSummary;
       }
     }
 
     return agencyData.map(({ reviewsUrl, ...rest }) => rest);
   }
 
-  private async extractReviews(url: string): Promise<string[]> {
+  private async extractProfileData(url: string): Promise<{ reviews: string[], profileSummary: string | undefined }> {
     if (!this.page) {
       throw new Error('Page not initialized');
     }
     try {
       await this.page.goto(url, { waitUntil: 'networkidle2' });
-      const reviews = await this.page.evaluate(() => {
-        const reviewElements = document.querySelectorAll('div.profile-review__quote');
-        return Array.from(reviewElements).map(el => (el as HTMLElement).innerText.trim());
+      const data = await this.page.evaluate(() => {
+        const reviews = Array.from(document.querySelectorAll('div.profile-review__quote')).map(el => (el as HTMLElement).innerText.trim());
+        const profileSummary = (document.querySelector('div#profile-summary-text') as HTMLElement)?.innerText.trim();
+        return { reviews, profileSummary };
       });
-      return reviews;
+      return data;
     } catch (error) {
-      console.error(`Error scraping reviews from ${url}:`, error);
-      return [];
+      console.error(`Error scraping profile data from ${url}:`, error);
+      return { reviews: [], profileSummary: undefined };
     }
   }
 
