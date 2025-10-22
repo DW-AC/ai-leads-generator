@@ -1,13 +1,12 @@
 import {GoogleSpreadsheet} from 'google-spreadsheet';
 import {JWT} from 'google-auth-library';
-import {Agency} from './interfaces/agency.interface';
 
 export class GoogleSheetWriter {
     private doc : GoogleSpreadsheet;
     private serviceAccountAuth : JWT;
 
     constructor(spreadsheetId : string) {
-        const creds = require('../credentials.json');
+        const creds = require('../../credentials.json');
         this.serviceAccountAuth = new JWT({
             email  : creds.client_email,
             key    : creds.private_key,
