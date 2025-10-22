@@ -12,5 +12,11 @@ export interface Agency {
     url : string | undefined;
     reviewsUrl? : string;
     reviews? : string[];
-    profileSummary? : string;
+    profile? : string;
+}
+
+export interface summary {
+    name : string;
+    review : string;
+    profile : string;
 }

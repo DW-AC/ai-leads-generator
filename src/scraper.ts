@@ -10,6 +10,7 @@ puppeteer.use(StealthPlugin());
 export class Scraper {
     private browser : Browser | null = null;
     private page : Page | null = null;
+    readonly LIMIT: number = 5;
 
     public async run() : Promise<void> {
         try {
@@ -50,7 +51,7 @@ export class Scraper {
         const agencyHandles = await this.page.$$('li.provider-list-item');
         const agencyData : Agency[] = [];
 
-        for (let i = 0; i < 50 && i < agencyHandles.length; i++) {
+        for (let i = 0; i < this.LIMIT && i < agencyHandles.length; i++) {
             const agencyHandle = agencyHandles[i];
             const agencyInfo = await agencyHandle.evaluate(agency => {
                 const title = (agency.querySelector('h3.provider__title a') as HTMLElement)?.innerText.trim();
@@ -144,9 +145,9 @@ export class Scraper {
 
         for (const agency of agencyData) {
             if (agency.reviewsUrl) {
-                const {reviews, profileSummary} = await this.extractProfileData(agency.reviewsUrl);
+                const {reviews, profile} = await this.extractProfileData(agency.reviewsUrl);
                 agency.reviews = reviews;
-                agency.profileSummary = profileSummary;
+                agency.profile = profile;
             }
         }
 
@@ -155,7 +156,7 @@ export class Scraper {
 
     private async extractProfileData(url : string) : Promise<{
         reviews : string[],
-        profileSummary : string | undefined
+        profile : string | undefined
     }> {
         if (!this.page) {
             throw new Error('Page not initialized');
@@ -164,12 +165,12 @@ export class Scraper {
             await this.page.goto(url, {waitUntil : 'networkidle2'});
             return await this.page.evaluate(() => {
                 const reviews = Array.from(document.querySelectorAll('div.profile-review__quote')).map(el => (el as HTMLElement).innerText.trim());
-                const profileSummary = (document.querySelector('div#profile-summary-text') as HTMLElement)?.innerText.trim();
-                return {reviews, profileSummary};
+                const profile = (document.querySelector('div#profile-summary-text p') as HTMLElement)?.innerText.trim();
+                return {reviews, profile};
             });
         } catch (error) {
             console.error(`Error scraping profile data from ${url}:`, error);
-            return {reviews : [], profileSummary : undefined};
+            return {reviews : [], profile : undefined};
         }
     }
 
