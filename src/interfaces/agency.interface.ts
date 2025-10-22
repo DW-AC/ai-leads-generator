@@ -12,5 +12,15 @@ export interface Agency {
     url : string | undefined;
     reviewsUrl? : string;
     reviews? : string[];
+<<<<<<< HEAD
     profileSummary? : string;
+=======
+    profile? : string;
+}
+
+export interface summary {
+    name : string;
+    review : string;
+    profile : string;
+>>>>>>> bfbab2daeaaaf2f79625550013ff5ad00d99b25a
 }

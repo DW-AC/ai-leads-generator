@@ -4,13 +4,20 @@ import {Browser, Page} from 'puppeteer';
 import fs from 'fs';
 import {Agency} from './interfaces/agency.interface';
 import {Range} from "./interfaces/range.interface";
+<<<<<<< HEAD
 import { GoogleSheetWriter } from './googleSheetWriter';
+=======
+>>>>>>> bfbab2daeaaaf2f79625550013ff5ad00d99b25a
 
 puppeteer.use(StealthPlugin());
 
 export class Scraper {
     private browser : Browser | null = null;
     private page : Page | null = null;
+<<<<<<< HEAD
+=======
+    readonly LIMIT: number = 5;
+>>>>>>> bfbab2daeaaaf2f79625550013ff5ad00d99b25a
 
     public async run() : Promise<void> {
         try {
@@ -23,12 +30,15 @@ export class Scraper {
 
             const agencies = await this.extractData();
             this.saveData(agencies);
+<<<<<<< HEAD
 
             const spreadsheetId = process.env.SPREADSHEET_ID;
             if (spreadsheetId) {
               const googleSheetWriter = new GoogleSheetWriter(spreadsheetId);
               await googleSheetWriter.write(agencies);
             }
+=======
+>>>>>>> bfbab2daeaaaf2f79625550013ff5ad00d99b25a
         } catch (error) {
             console.error('An error occurred during scraping:', error);
         } finally {
@@ -57,7 +67,11 @@ export class Scraper {
         const agencyHandles = await this.page.$$('li.provider-list-item');
         const agencyData : Agency[] = [];
 
+<<<<<<< HEAD
         for (let i = 0; i < 50 && i < agencyHandles.length; i++) {
+=======
+        for (let i = 0; i < this.LIMIT && i < agencyHandles.length; i++) {
+>>>>>>> bfbab2daeaaaf2f79625550013ff5ad00d99b25a
             const agencyHandle = agencyHandles[i];
             const agencyInfo = await agencyHandle.evaluate(agency => {
                 const title = (agency.querySelector('h3.provider__title a') as HTMLElement)?.innerText.trim();
@@ -151,9 +165,15 @@ export class Scraper {
 
         for (const agency of agencyData) {
             if (agency.reviewsUrl) {
+<<<<<<< HEAD
                 const {reviews, profileSummary} = await this.extractProfileData(agency.reviewsUrl);
                 agency.reviews = reviews;
                 agency.profileSummary = profileSummary;
+=======
+                const {reviews, profile} = await this.extractProfileData(agency.reviewsUrl);
+                agency.reviews = reviews;
+                agency.profile = profile;
+>>>>>>> bfbab2daeaaaf2f79625550013ff5ad00d99b25a
             }
         }
 
@@ -162,7 +182,11 @@ export class Scraper {
 
     private async extractProfileData(url : string) : Promise<{
         reviews : string[],
+<<<<<<< HEAD
         profileSummary : string | undefined
+=======
+        profile : string | undefined
+>>>>>>> bfbab2daeaaaf2f79625550013ff5ad00d99b25a
     }> {
         if (!this.page) {
             throw new Error('Page not initialized');
@@ -171,12 +195,21 @@ export class Scraper {
             await this.page.goto(url, {waitUntil : 'networkidle2'});
             return await this.page.evaluate(() => {
                 const reviews = Array.from(document.querySelectorAll('div.profile-review__quote')).map(el => (el as HTMLElement).innerText.trim());
+<<<<<<< HEAD
                 const profileSummary = (document.querySelector('div#profile-summary-text') as HTMLElement)?.innerText.trim();
                 return {reviews, profileSummary};
             });
         } catch (error) {
             console.error(`Error scraping profile data from ${url}:`, error);
             return {reviews : [], profileSummary : undefined};
+=======
+                const profile = (document.querySelector('div#profile-summary-text p') as HTMLElement)?.innerText.trim();
+                return {reviews, profile};
+            });
+        } catch (error) {
+            console.error(`Error scraping profile data from ${url}:`, error);
+            return {reviews : [], profile : undefined};
+>>>>>>> bfbab2daeaaaf2f79625550013ff5ad00d99b25a
         }
     }
 
