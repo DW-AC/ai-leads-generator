@@ -76,7 +76,7 @@ export class Analyzer {
 
         // const prompt = `Please Analyze the following JSON data and summarize the reviews and the summarize the profile of each item: ${JSON.stringify(myData)}`;
         const response = await ollama.generate({
-            model: 'gemma3', // Replace with your desired model
+            model: 'qwen3-coder:480b-cloud', // Replace with your desired model
             prompt: prompt,
         });
         console.log('Ollama response:', response.response);
