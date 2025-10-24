@@ -82,20 +82,43 @@ export class GoogleMapsScraper {
                         // No rating
                     }
 
-                    const addressSelector = 'div.fontBodyMedium';
-                    const allDivs = await laundryHandle.$$(addressSelector);
-                    let address = '';
-                    let phone = '';
+                    const infoText = await laundryHandle.evaluate(el => {
+                        const divs = Array.from(el.querySelectorAll('div.fontBodyMedium'));
+                        const infoDiv = divs.find(d => d.textContent && d.textContent.includes('·'));
+                        return infoDiv ? infoDiv.textContent : '';
+                    }) || '';
 
-                    for (const div of allDivs) {
-                        const text = await div.evaluate(el => el.textContent || '');
-                        if (text.includes(',')) {
-                            address = text.trim();
+                    const parts = infoText.split('·').map(p => p.trim());
+                    let address = parts.find(p => p.includes(',')) || '';
+
+                    const phoneRegex = /((\+63|0)?\s?9\d{2}\s?\d{3}\s?\d{4}|(\(\d{2,4}\)\s?\d{3,4}-\d{4}))/;
+                    let phone = parts.find(p => phoneRegex.test(p)) || '';
+
+                    if (!address || !phone) {
+                        const infoDivsTexts = await laundryHandle.$$eval('div.fontBodyMedium', divs => divs.map(d => d.textContent?.trim() || ''));
+
+                        if (!phone) {
+                            phone = infoDivsTexts.find(t => phoneRegex.test(t)) || '';
                         }
-                        if (/\d{3}-\d{4}/.test(text) || /\d{4} \d{4}/.test(text)) {
-                            phone = text.trim();
+
+                        if (!address) {
+                            const addressKeywords = ['St', 'Ave', 'Rd', 'Building', 'Tower', 'Floor', 'Village', 'LGF', 'G/F'];
+                            address = infoDivsTexts.find(t =>
+                                !phoneRegex.test(t) &&
+                                !t.includes('stars') &&
+                                !(t.startsWith('"') && t.endsWith('"')) &&
+                                (t.includes(',') || addressKeywords.some(kw => t.includes(kw)))
+                            ) || '';
                         }
                     }
+
+                    if (address.includes(name)) {
+                        address = address.replace(name, '').trim();
+                    }
+                    address = address.replace(/\s*\d\.\d\(\d+\)\s*.*/, '').trim();
+                    address = address.replace(/Open 24 hours|Open ⋅ Closes.*|Closes.*/, '').trim();
+                    address = address.replace(/^\W*/, '');
+
 
                     let website = '';
                     try {
@@ -104,8 +127,22 @@ export class GoogleMapsScraper {
                         // No website
                     }
 
-                    laundries.push({ name, rating, address, phone, website });
-                } catch(e) {
+                    let reviews: string[] = [];
+                    try {
+                        reviews = await laundryHandle.evaluate(el => {
+                             const reviewSpans = Array.from(el.querySelectorAll('span'));
+                             return reviewSpans.map(span => span.textContent?.trim() || '').filter(text => text.startsWith('"') && text.endsWith('"'));
+                        });
+                    } catch (e) {
+                        // No reviews found
+                    }
+
+                    if (address === name) {
+                        address = '';
+                    }
+
+                    laundries.push({ name, rating, address, phone, website, reviews });
+                } catch (e) {
                     // Could not parse this element, skip it.
                 }
             }

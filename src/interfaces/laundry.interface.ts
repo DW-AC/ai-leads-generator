@@ -4,4 +4,5 @@ export interface Laundry {
     phone: string;
     website: string;
     rating: number;
+    reviews: string[];
 }
