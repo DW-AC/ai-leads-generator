@@ -14,6 +14,7 @@ export class GoogleMapsScraper {
         try {
             await this.initialize();
             await this.navigate('https://www.google.com/maps/search/laundry+in+makati+city+philippines');
+
             const laundries = await this.extractData();
             this.saveData(laundries);
         } catch (error) {
@@ -81,12 +82,20 @@ export class GoogleMapsScraper {
                         // No rating
                     }
 
-                    const infoContainer = await laundryHandle.$('div:not([class]) > div:not([class])');
-                    const infoText = await infoContainer?.evaluate(el => el.textContent || '') || '';
+                    const addressSelector = 'div.fontBodyMedium';
+                    const allDivs = await laundryHandle.$$(addressSelector);
+                    let address = '';
+                    let phone = '';
 
-                    const parts = infoText.split('·').map(p => p.trim());
-                    let address = parts.find(p => p.includes(',')) || '';
-                    let phone = parts.find(p => /\d{3}-\d{4}/.test(p)) || '';
+                    for (const div of allDivs) {
+                        const text = await div.evaluate(el => el.textContent || '');
+                        if (text.includes(',')) {
+                            address = text.trim();
+                        }
+                        if (/\d{3}-\d{4}/.test(text) || /\d{4} \d{4}/.test(text)) {
+                            phone = text.trim();
+                        }
+                    }
 
                     let website = '';
                     try {
