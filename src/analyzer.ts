@@ -2,7 +2,7 @@ import fs from "fs";
 import ollama from 'ollama';
 import myData from './../agencies.json';
 import {Agency} from "./interfaces/agency.interface";
-import {GoogleSheetWriter} from "./googleSheetWriter";
+import {GoogleSheetWriter} from "./google/googleSheetWriter";
 import {GoogleSheetReader} from "./google/googleSheetReader";
 export class Analyzer {
     readonly GOOGLE_SHEET_ID: string = "1FFjaZnZDX90_QrFyXRW13ayZU8USHUCmzsFszbU8rp8";
@@ -45,22 +45,22 @@ export class Analyzer {
         console.log('done');
     }
 
-    public async contactLeads() : Promise<void> {
-        const prompt = "Your name is \"Jymyl Bandong\" and you are the CEO of a web development company named \"DevDaddies\".\n" +
-            "\n" +
-            "Your contact phone is \"1234567890\" and your email is \"jym@devdaddies.com\".\n" +
-            "\n" +
-            "Do not show any notes and customization guidelines." +
-            "\n" +
-            "Analyze the following JSON data that contains a provider and compose an email inviting them for a collaboration project: " + JSON.stringify(myData[0]);
-
-        // const prompt = `Please Analyze the following JSON data and summarize the reviews and the summarize the profile of each item: ${JSON.stringify(myData)}`;
-        const response = await ollama.generate({
-            model: 'gemma3', // Replace with your desired model
-            prompt: prompt,
-        });
-        console.log('Ollama response:', response.response);
-    }
+    // public async contactLeads() : Promise<void> {
+    //     const prompt = "Your name is \"Jymyl Bandong\" and you are the CEO of a web development company named \"DevDaddies\".\n" +
+    //         "\n" +
+    //         "Your contact phone is \"1234567890\" and your email is \"jym@devdaddies.com\".\n" +
+    //         "\n" +
+    //         "Do not show any notes and customization guidelines." +
+    //         "\n" +
+    //         "Analyze the following JSON data that contains a provider and compose an email inviting them for a collaboration project: " + JSON.stringify(myData[0]);
+    //
+    //     // const prompt = `Please Analyze the following JSON data and summarize the reviews and the summarize the profile of each item: ${JSON.stringify(myData)}`;
+    //     const response = await ollama.generate({
+    //         model: 'gemma3', // Replace with your desired model
+    //         prompt: prompt,
+    //     });
+    //     console.log('Ollama response:', response.response);
+    // }
 
     public async contactLeadsFromSheet() : Promise<void> {
         const googleSheetReader = new GoogleSheetReader(this.GOOGLE_SHEET_ID);
